@@ -4,7 +4,7 @@ const { createProxyMiddleware, responseInterceptor } = require("http-proxy-middl
 const app = express();
 
 app.use("/", createProxyMiddleware({
-  target: "https://now.gg",
+  target: "https://educationbluesky.com",
   changeOrigin: true,
   ws: true,
   selfHandleResponse: true,
@@ -12,7 +12,7 @@ app.use("/", createProxyMiddleware({
     let body = buffer.toString("utf8");
     delete proxyRes.headers['set-cookie'];
     let ipPrefix = req.ip.split(".").slice(0,3).join(".");
-    body = body.replace(/https:\/\/now\.gg/g, `${ipPrefix}.nowgg.fun`);
+    body = body.replace(/https:\/\/educationbluesky\.com/g, `${ipPrefix}.nowgg.fun`);
     return body;
   })
 }));

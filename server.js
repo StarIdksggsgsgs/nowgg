@@ -1,5 +1,5 @@
 const express = require("express");
-const { createProxyMiddleware, responseInterceptor } = require("http-proxy-middleware");
+const { createProxyMiddleware } = require("http-proxy-middleware");
 
 const app = express();
 
@@ -7,14 +7,18 @@ app.use("/", createProxyMiddleware({
   target: "https://educationbluesky.com",
   changeOrigin: true,
   ws: true,
-  selfHandleResponse: true,
-  onProxyRes: responseInterceptor(async (buffer, proxyRes, req) => {
-    let body = buffer.toString("utf8");
-    delete proxyRes.headers['set-cookie'];
-    let ipPrefix = req.ip.split(".").slice(0,3).join(".");
-    body = body.replace(/https:\/\/educationbluesky\.com/g, `${ipPrefix}.nowgg.fun`);
-    return body;
-  })
+  selfHandleResponse: false, // let headers pass through
+  onProxyRes(proxyRes, req, res) {
+    if (proxyRes.headers['location']) {
+      let ipPrefix = req.ip.split('.').slice(0,3).join('.');
+      proxyRes.headers['location'] = proxyRes.headers['location']
+        .replace('https://educationbluesky.com', `${ipPrefix}.nowgg.fun`);
+    }
+    delete proxyRes.headers['set-cookie']; // block cookies
+  },
+  onProxyReq(proxyReq, req, res) {
+    proxyReq.removeHeader('cookie'); // prevent sending client cookies
+  }
 }));
 
 const PORT = process.env.PORT || 3000;

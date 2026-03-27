@@ -1,25 +1,28 @@
 import express from "express";
-import fetch from "node-fetch";
 
 const app = express();
 
 app.use(async (req, res) => {
     try {
-        const fullPath = req.originalUrl;
-
         let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "";
         ip = ip.split(",")[0].trim();
         const firstNumber = ip.match(/\d+/)?.[0] || "1";
 
-        let target;
+        const fullPath = req.originalUrl;
+
+        let targetHost;
+        let targetUrl;
+
         if (fullPath.startsWith("/apps")) {
-            const appPath = fullPath.replace("/apps/", "");
-            target = `https://${firstNumber}.nowgg.fun/${appPath}`;
+            const path = fullPath.replace("/apps", "");
+            targetHost = `${firstNumber}.nowgg.fun`;
+            targetUrl = `https://${targetHost}${path}`;
         } else {
-            target = "https://educationbluesky.com" + fullPath;
+            targetHost = "educationbluesky.com";
+            targetUrl = `https://${targetHost}${fullPath}`;
         }
 
-        const upstream = await fetch(target, {
+        const upstream = await fetch(targetUrl, {
             method: req.method,
             headers: {
                 "user-agent": req.headers["user-agent"] || "",
@@ -31,22 +34,6 @@ app.use(async (req, res) => {
         });
 
         const contentType = upstream.headers.get("content-type") || "";
-        let body;
-
-        if (contentType.includes("text") || contentType.includes("json") || contentType.includes("javascript")) {
-            body = await upstream.text();
-
-            body = body
-                .replace(/https:\/\/educationbluesky\.com/g, "")
-                .replace(/https:\/\/\d+\.nowgg\.fun/g, "/apps")
-                .replace(/href="\//g, 'href="/')
-                .replace(/src="\//g, 'src="/')
-                .replace(/action="\//g, 'action="/');
-        } else {
-            const buf = await upstream.arrayBuffer();
-            body = Buffer.from(buf);
-        }
-
         res.status(upstream.status);
 
         upstream.headers.forEach((value, key) => {
@@ -60,9 +47,26 @@ app.use(async (req, res) => {
             }
         });
 
-        res.send(body);
-    } catch {
-        res.status(500).send("Proxy error");
+        if (contentType.includes("text/html")) {
+            let body = await upstream.text();
+
+            body = body
+                .replace(/https:\/\/educationbluesky\.com/g, "")
+                .replace(/https:\/\/\d+\.nowgg\.fun/g, "/apps")
+                .replace(/\/\/educationbluesky\.com/g, "")
+                .replace(/\/\/\d+\.nowgg\.fun/g, "/apps")
+                .replace(/href="\//g, 'href="/')
+                .replace(/src="\//g, 'src="/')
+                .replace(/action="\//g, 'action="/');
+
+            res.send(body);
+        } else {
+            const buffer = await upstream.arrayBuffer();
+            res.send(Buffer.from(buffer));
+        }
+
+    } catch (e) {
+        res.status(500).send("Proxy error: " + e.message);
     }
 });
 

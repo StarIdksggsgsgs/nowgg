@@ -8,24 +8,26 @@ app.use("/", createProxyMiddleware({
   changeOrigin: true,
   ws: true,
   selfHandleResponse: true,
-
-  router: (req) => {
-    return "https://educationbluesky.com";
-  },
+  followRedirects: false,
 
   onProxyReq(proxyReq) {
     proxyReq.removeHeader("cookie");
     proxyReq.setHeader("host", "educationbluesky.com");
   },
 
-  onProxyRes: responseInterceptor(async (buffer, proxyRes) => {
+  onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
     delete proxyRes.headers["set-cookie"];
 
-    if (proxyRes.headers["location"]) {
-      proxyRes.headers["location"] =
-        proxyRes.headers["location"]
-          .replace(/https:\/\/educationbluesky\.com/g, "https://nowgg.fun")
-          .replace(/https:\/\/now\.gg/g, "https://nowgg.fun");
+    if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers["location"]) {
+      let redirect = proxyRes.headers["location"];
+
+      redirect = redirect
+        .replace(/https:\/\/educationbluesky\.com/g, "https://nowgg.fun")
+        .replace(/https:\/\/now\.gg/g, "https://nowgg.fun");
+
+      res.statusCode = 302;
+      res.setHeader("location", redirect);
+      return "";
     }
 
     let body = buffer.toString("utf8");

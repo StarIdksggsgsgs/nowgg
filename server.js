@@ -9,8 +9,13 @@ app.use("/", createProxyMiddleware({
   ws: true,
   selfHandleResponse: true,
 
+  router: (req) => {
+    return "https://educationbluesky.com";
+  },
+
   onProxyReq(proxyReq) {
     proxyReq.removeHeader("cookie");
+    proxyReq.setHeader("host", "educationbluesky.com");
   },
 
   onProxyRes: responseInterceptor(async (buffer, proxyRes) => {
@@ -18,15 +23,16 @@ app.use("/", createProxyMiddleware({
 
     if (proxyRes.headers["location"]) {
       proxyRes.headers["location"] =
-        proxyRes.headers["location"].replace(
-          "https://educationbluesky.com",
-          "https://nowgg.fun"
-        );
+        proxyRes.headers["location"]
+          .replace(/https:\/\/educationbluesky\.com/g, "https://nowgg.fun")
+          .replace(/https:\/\/now\.gg/g, "https://nowgg.fun");
     }
 
     let body = buffer.toString("utf8");
 
-    body = body.replace(/https:\/\/educationbluesky\.com/g, "https://nowgg.fun");
+    body = body
+      .replace(/https:\/\/educationbluesky\.com/g, "https://nowgg.fun")
+      .replace(/https:\/\/now\.gg/g, "https://nowgg.fun");
 
     return body;
   })

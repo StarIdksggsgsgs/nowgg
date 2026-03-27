@@ -1,7 +1,7 @@
 {
   "name": "nowgg-proxy",
   "version": "1.0.0",
-  "description": "Proxy now.gg and rewrite links to IP.nowgg.fun",
+  "description": "Full escape-proof proxy for nowgg.fun / educationbluesky.com",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

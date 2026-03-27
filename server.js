@@ -20,11 +20,9 @@ app.use("/", createProxyMiddleware({
 
     if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers["location"]) {
       let redirect = proxyRes.headers["location"];
-
       redirect = redirect
         .replace(/https:\/\/educationbluesky\.com/g, "https://nowgg.fun")
         .replace(/https:\/\/now\.gg/g, "https://nowgg.fun");
-
       res.statusCode = 302;
       res.setHeader("location", redirect);
       return "";
@@ -34,7 +32,19 @@ app.use("/", createProxyMiddleware({
 
     body = body
       .replace(/https:\/\/educationbluesky\.com/g, "https://nowgg.fun")
-      .replace(/https:\/\/now\.gg/g, "https://nowgg.fun");
+      .replace(/https:\/\/now\.gg/g, "https://nowgg.fun")
+      .replace(/window\.location\s*=\s*['"]https?:\/\/(educationbluesky\.com|now\.gg)/g, "window.location='https://nowgg.fun");
+
+    if (proxyRes.headers["content-type"] && proxyRes.headers["content-type"].includes("application/json")) {
+      try {
+        const json = JSON.parse(body);
+        const str = JSON.stringify(json).replace(/https:\/\/educationbluesky\.com/g, "https://nowgg.fun")
+                                        .replace(/https:\/\/now\.gg/g, "https://nowgg.fun");
+        return str;
+      } catch {
+        return body;
+      }
+    }
 
     return body;
   })

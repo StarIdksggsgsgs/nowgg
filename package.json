@@ -1,16 +1,18 @@
 {
-  "name": "full-proxy",
+  "name": "nowgg-proxy",
   "version": "1.0.0",
-  "description": "EducationBluesky + nowgg proxy",
-  "type": "module",
+  "description": "Proxy now.gg and rewrite links to nowgg.fun",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "engines": {
-    "node": ">=18"
-  },
   "dependencies": {
-    "express": "^4.18.2"
-  }
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "author": "",
+  "license": "MIT"
 }

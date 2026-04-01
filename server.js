@@ -25,15 +25,31 @@ app.use("/", createProxyMiddleware({
 
     let firstIP = req.userIP.split(".")[0] || "0";
 
+    const makeBase = () => `https://tetosarcade.win/algebra.html?url=${firstIP}.nowgg.fun`;
+
     const convertUrl = (url) => {
-      if (!url.includes(".com")) return url;
-      const path = url.split(".com")[1] || "";
-      return `https://tetosarcade.win/algebra.html?url=${firstIP}.nowgg.fun${path}`;
+      let path = "/";
+
+      if (url.includes(".com")) {
+        path = url.split(".com")[1] || "/";
+      } else if (url.startsWith("/")) {
+        path = url;
+      }
+
+      return makeBase() + path;
     };
 
     if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers["location"]) {
+      let loc = proxyRes.headers["location"];
+
+      if (loc.includes("ng_")) {
+        res.statusCode = 302;
+        res.setHeader("location", makeBase() + "/");
+        return "";
+      }
+
       res.statusCode = 302;
-      res.setHeader("location", convertUrl(proxyRes.headers["location"]));
+      res.setHeader("location", convertUrl(loc));
       return "";
     }
 
